@@ -5,7 +5,7 @@ argument-hint: "[figma URL or block name]"
 disable-model-invocation: true
 allowed-tools: Read, Grep, Glob, Bash, Write, Edit, mcp__figma__get_design_context, mcp__figma__get_screenshot, mcp__figma__get_metadata, mcp__figma__get_variable_defs, mcp__playwright__browser_navigate, mcp__playwright__browser_take_screenshot, mcp__playwright__browser_snapshot, mcp__playwright__browser_resize, mcp__playwright__browser_evaluate
 ---
-<!-- Last updated: 2026-05-16T17:00+10:00 -->
+<!-- Last updated: 2026-05-16T17:30+10:00 -->
 
 # Skill: figma-workflow
 
@@ -176,7 +176,7 @@ When building a new block, the editor preview (`edit.js`) and the front-end rend
 1. **Shared PHP helper** called from both `render.php` and the editor's `<ServerSideRender>`.
 2. **`edit.js` mirrors `render.php` markup exactly**: class names, structure, attributes. Run Step 8 against both surfaces.
 
-The single most common Gutenberg fidelity bug is `edit.js` quietly drifting from the front-end render. The spec audit catches it if you actually run it on both surfaces. See `block-dev/SKILL.md` for the asset pipeline and editor-vs-frontend CSS reset rules.
+The single most common Gutenberg fidelity bug is `edit.js` quietly drifting from the front-end render. The spec audit catches it if you actually run it on both surfaces. See `block-asset-pipeline/SKILL.md` for the wiring and `block-dev/SKILL.md` for the editor-vs-frontend CSS reset rules.
 
 ### Keeping the Maps Fresh
 

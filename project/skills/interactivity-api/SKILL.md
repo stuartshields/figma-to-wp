@@ -4,7 +4,7 @@ description: Use WordPress Interactivity API directives for new block frontend b
 disable-model-invocation: true
 allowed-tools: Read, Grep, Glob, Bash, Write, Edit
 ---
-<!-- Last updated: 2026-05-16T17:00+10:00 -->
+<!-- Last updated: 2026-05-16T17:30+10:00 -->
 
 # Skill: interactivity-api
 
@@ -18,7 +18,7 @@ Do NOT use for editor-side behaviour (that's `edit.js`).
 
 ## Why
 
-The legacy path documented in `block-dev/SKILL.md` requires 4 wiring steps per block (`view.js` → webpack entry → `block.json` `viewScript` → `inc/assets.php` register). The Interactivity API replaces it with directives in the rendered HTML and one `store()` call.
+The legacy path documented in `block-asset-pipeline/SKILL.md` requires 4 wiring steps per block (`view.js` → webpack entry → `block.json` `viewScript` → `inc/assets.php` register). The Interactivity API replaces it with directives in the rendered HTML and one `store()` call.
 
 Result:
 - Less bundler glue per block.
@@ -147,7 +147,7 @@ Use the legacy `view.js` + `inc/assets.php` path when:
 - You need cross-block state coordination (one block tells another to scroll).
 - The block is being added to a part of the codebase that doesn't yet have `@wordpress/scripts` interactivity module support configured.
 
-The legacy path is documented in `block-dev/SKILL.md` under "Block Asset Pipeline."
+The legacy path is documented in `block-asset-pipeline/SKILL.md`.
 
 ## Rules
 

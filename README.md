@@ -1,4 +1,4 @@
-<!-- Last updated: 2026-05-16T17:00+10:00 -->
+<!-- Last updated: 2026-05-16T17:30+10:00 -->
 
 # Figma to WP
 
@@ -29,7 +29,7 @@ The patterns in this bundle target the following minimums. Anything newer is doc
 
 - **WordPress 6.6+** baseline. Block Bindings (stable since 6.5), Interactivity API (stable since 6.5), and Block API v3 all work on 6.6. WP 6.9+ unlocks the binding dropdown UI (`get_fields_list` field-object shape) and `supports.interactivity: { clientNavigation: true }` for client-side navigation. The `block-bindings` and `interactivity-api` skills gate these behind version checks so 6.6–6.8 sites continue to render.
 - **PHP 7.4+**. Examples use typed parameters, return types, and null-coalescing. WordPress core's floor is lower; the bundle's PHP examples assume 7.4 so you don't have to translate.
-- **Block API v3** (`"apiVersion": 3` in `block.json`). Required for `viewScriptModule` and the asset pipeline the block-dev skill documents.
+- **Block API v3** (`"apiVersion": 3` in `block.json`). Required for `viewScriptModule` and the asset pipeline the block-asset-pipeline skill documents.
 - **`theme.json` schema v3** (current). The design-tokens pipeline writes to `settings.custom.*`.
 - **Tailwind 4** for templates. The CLAUDE.example documents the `bg-(--var)` parentheses syntax this version requires. Don't paste Tailwind 3 bracket syntax.
 - **Node 18+** for `@wordpress/scripts` and the Tailwind 4 build pipeline.
@@ -43,7 +43,10 @@ If your target site is on an older WP version, the skills still apply but featur
 Skills are workflows you trigger with a slash command. Each one is `disable-model-invocation: true`, so Claude only runs them when you ask, not automatically.
 
 - **`/figma-workflow`**. The full Figma-to-code path. Block name gate, frame quality gate, pattern-vs-block branch, MCP plumbing, token translation, mobile spacing rules, measurement-driven spec audit. Folds the former global `/figma` MCP skill into one project-scoped workflow.
-- **`/block-dev`**. Block conventions: editor UX, asset pipeline, button patterns, coding standards, editor-vs-frontend markup parity.
+- **`/block-dev`**. Entry point for block development. Editor UX, reference-plugin pattern, pointers to the deeper block skills below.
+- **`/block-asset-pipeline`**. Wiring `view.js`, webpack, `block.json`, and `inc/assets.php` for a block's frontend CSS and view script.
+- **`/block-buttons`**. The `buttons` array attribute, `ButtonGroupEditor`, and the shared `animated-button` render partial.
+- **`/block-coding-standards`**. PHP and JS conventions for block code: sanitisation, escaping, docblocks, prettier, DOM contracts.
 - **`/block-bindings`**. For new dynamic content surfaces (post meta, taxonomy, custom fields) sourced through stock core blocks. Prefer over a custom `render_callback` block.
 - **`/interactivity-api`**. For new block frontend behaviour (toggles, accordions, modals). Prefer over hand-rolled `view.js` + webpack wiring.
 - **`/design-tokens`**. When Figma variables change. Re-runs 10up's [`figma-to-wordpress-theme-json-exporter`](https://github.com/10up/figma-to-wordpress-theme-json-exporter), updates `theme.json`, Tailwind aliases in `theme-variables.css`, then refreshes the maps.

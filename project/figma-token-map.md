@@ -1,6 +1,10 @@
+<!-- Last updated: 2026-05-16T14:00+10:00 -->
+
 # Figma → Code Token Map
 
-Generated from `content/themes/wp-theme/theme.json`, `theme-variables.css`, and `DESIGN-TOKENS.md` on 2026-04-08.
+Generated from `content/themes/wp-theme/theme.json`, `theme-variables.css`, and `DESIGN-TOKENS.md`. Re-run via `design-tokens/SKILL.md` when tokens change in Figma.
+
+**This file is the canonical desktop ↔ mobile spacing reference.** The figma-workflow skill and `DESIGN-TOKENS.md` both link here rather than duplicate the table.
 
 **The canonical reference is `content/themes/wp-theme/DESIGN-TOKENS.md`** — read it for context and the why behind the scale. This file is the lookup table: when Figma returns a variable name, find it here and use the matching token.
 

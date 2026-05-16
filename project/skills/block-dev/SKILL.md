@@ -5,6 +5,7 @@ argument-hint: "[block-slug]"
 disable-model-invocation: true
 allowed-tools: Read, Grep, Glob, Bash, Write, Edit
 ---
+<!-- Last updated: 2026-05-16T14:00+10:00 -->
 
 # Skill: block-dev
 
@@ -34,6 +35,18 @@ Patterns to look for in the reference:
 5. **Editor sizing uses front-end mobile values:** The editor canvas is narrower than desktop, so editor SCSS should use the front-end's mobile breakpoint values (e.g. `12px 18px` padding, `16px` font) not desktop values.
 6. **Pill buttons with RichText + siblings:** When a button has both RichText and extra elements (chevrons, icons), put pill styling (background, border, border-radius, padding) on the wrapper div. The RichText span and siblings render inside. Color goes on the wrapper too so all children inherit via `currentColor`.
 7. **Front-end styles leak into the editor.** WordPress loads `style` (from `block.json`) in both the front-end and the editor. Front-end layout constraints (max-width, min-width, fixed heights, media queries) will apply in the editor canvas. Always check if `style.scss` rules need to be reset in `editor.scss`, especially responsive layout properties that don't suit the narrow editor canvas.
+8. **Editor preview markup must mirror the front-end render.** The single most common Gutenberg fidelity bug is `edit.js` quietly drifting from the theme template part. Two acceptable patterns:
+	- **Shared PHP helper** called from both `render.php` and the editor's `<ServerSideRender>`.
+	- **`edit.js` mirrors `render.php` markup exactly** — class names, structure, attributes. Run the figma-workflow spec audit (Step 8) against both surfaces.
+	When in doubt, prefer the shared-helper path. Pure client-side `edit.js` reimplementations always drift over time.
+
+### Modern frontend behaviour: Interactivity API
+
+For new blocks needing toggles, accordions, modals, tabs, or carousel state, prefer the WordPress Interactivity API over the legacy `view.js` + webpack entry + `inc/assets.php` pipeline. See `interactivity-api/SKILL.md` for the directive-based pattern. The legacy asset pipeline below remains valid when the API doesn't fit (third-party libraries, cross-block coordination).
+
+### Dynamic content surfaces: Block Bindings
+
+For blocks whose content is sourced from post meta, taxonomy terms, or custom fields and whose markup is a stock core block, prefer the Block Bindings API over a custom `wpb/*` block with a `render_callback`. See `block-bindings/SKILL.md`.
 
 ### Block Asset Pipeline
 

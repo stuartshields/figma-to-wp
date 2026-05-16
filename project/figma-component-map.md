@@ -1,6 +1,8 @@
+<!-- Last updated: 2026-05-16T14:00+10:00 -->
+
 # Figma → Code Component Map
 
-Generated from a scan of `content/mu-plugins/wp-blocks/` and `content/themes/wp-theme/` on 2026-04-27.
+Generated from a scan of `content/mu-plugins/wp-blocks/` and `content/themes/wp-theme/`.
 
 This file is a lookup table. When Figma returns a design, grep for the closest match here **before** generating new markup. If something in Figma looks like an entry below, use the existing component — do not invent a parallel one.
 
@@ -27,6 +29,25 @@ Shorter hero for sub-pages with background image, gradient overlays, heading, an
 - Render: `wp-theme/template-parts/blocks/hero/secondary-hero.php`
 - Attributes: `align`, `backgroundImage`, `mobileImage`, `displayOption`, `heading`, `subheading`
 - Figma cue: Full-bleed shorter hero (~half height of primary), heading over image, breadcrumbs visible.
+
+#### Hero details (both blocks)
+
+Both heroes render their images via `template-parts/components/art-direction-image.php` (`<picture>` + `<img>` with `object-fit: cover`). Same approach is used by non-hero content blocks (ticker-banner, media-split-vertical). There is no `background-image` + `image-set()` pattern in the codebase.
+
+**Container heights** — both heroes use fixed heights at every breakpoint (no `h-dvh`). Each breakpoint has its own token in `assets/theme-variables.css`. The wrapper applies base + `sm:` + `lg:` + `2xl:` classes.
+
+| Breakpoint | Min-width | Primary token | Primary px | Secondary token | Secondary px |
+|---|---|---|---|---|---|
+| Mobile | 0 | `--hero-primary-mobile` | 844 | `--hero-secondary-mobile` | 650 |
+| Tablet | 640px | `--hero-primary-tablet` | 940 | `--hero-secondary-tablet` | 720 |
+| Laptop | 1024px | `--hero-primary-laptop` | 797 | `--hero-secondary-laptop` | 796 |
+| Desktop | 1440px+ | `--hero-primary-desktop` | 940 | `--hero-secondary-desktop` | 796 |
+
+**Art direction breakpoint** — both heroes use a `640px` breakpoint: **Mobile** loads the mobile image asset; **Tablet / Laptop / Desktop** all load the desktop asset. Editors upload two separate images so the crop/framing differs between portrait-ish mobile and landscape everything-else.
+
+**Implementation** — hero templates pass `desktop_url` and `mobile_url` (built from `wp_get_attachment_image_url()` with `hero-desktop` / `hero-mobile` image sizes) into `components/art-direction-image`, plus `breakpoint`, `class`, `loading`, `fetchpriority`. The hero `<section>` is a container with the fixed-height tokens; the `<picture>` lives in an absolutely-positioned wrapper with `overflow-clip`. Image uses `object-fit: cover`. Alt text flows to `<img alt="">` via the component — no `role="img"` on the section.
+
+**Figma BG image caveat** — Figma hero/banner background images use a **fixed-size container centered** with `left: 50%; top: 50%; transform: translate(-50%, -50%)` (NOT `position: absolute; inset: 0` with `object-cover`). The fixed container keeps zoom/crop constant as the component height changes. Check each breakpoint individually — desktop may switch to edge-pinned positioning instead of centering.
 
 ### Content blocks
 

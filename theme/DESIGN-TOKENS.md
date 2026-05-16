@@ -1,6 +1,10 @@
+<!-- Last updated: 2026-05-16T14:00+10:00 -->
+
 # Design Tokens
 
 How the design system connects Figma to the front end, and what you need to know to use it.
+
+> **Lookup table lives in `.claude/figma-token-map.md`.** This file documents the *why*; the map is the *what*. The Figma → token pipeline is documented in `design-tokens/SKILL.md` (10up's exporter plugin, theme.json canonical, Tailwind `@theme` aliases).
 
 ## Token Flow
 
@@ -57,42 +61,15 @@ This is the part that catches people out.
 
 Figma's spacing variables have two modes - desktop and mobile. The same variable name (`spacing/150`) resolves to different pixel values depending on the mode. Our `theme.json` and `theme-variables.css` only hold the **desktop** values, because WordPress doesn't support responsive spacing presets.
 
-So when you're building a mobile layout and Figma says `spacing/150`, you can't just use `gap-150`. That's the desktop value (12px). The mobile value for that same Figma variable is 8px, which is `gap-100` on our scale.
+So when you're building a mobile layout and Figma says `spacing/150`, you can't use `gap-150` — that's the desktop value (12px). The mobile value for that same Figma variable is 8px, which is `gap-100` on our scale.
 
-Here's the full mapping:
-
-| Figma variable | Desktop value | Desktop token | Mobile value | Mobile token |
-|----------------|---------------|---------------|--------------|--------------|
-| `spacing/50` | 4px | `*-50` | 2px | `*-0.5` |
-| `spacing/150` | 12px | `*-150` | 8px | `*-100` |
-| `spacing/200` | 16px | `*-200` | 12px | `*-150` |
-| `spacing/250` | 20px | `*-250` | 16px | `*-200` |
-| `spacing/300` | 24px | `*-300` | 16px | `*-200` |
-| `spacing/400` | 32px | `*-400` | 20px | `*-250` |
-| `spacing/500` | 40px | `*-500` | 24px | `*-300` |
-
-### How to use this
-
-**Mobile-only templates** (anything inside `lg:hidden` or the mobile menu panel) - use the mobile token directly:
-```html
-<div class="gap-100">  <!-- Figma spacing/150 at mobile = 8px -->
-```
-
-**Desktop-only templates** (anything inside `hidden lg:flex`) - use the desktop token:
-```html
-<div class="gap-150">  <!-- Figma spacing/150 at desktop = 12px -->
-```
-
-**Shared/responsive elements** - mobile token as the base, desktop with `lg:` prefix:
-```html
-<div class="gap-100 lg:gap-150">  <!-- 8px mobile, 12px desktop -->
-```
+**The mapping table lives in `.claude/figma-token-map.md` under "Spacing — Mobile ≠ Desktop."** That is the single source of truth — applying it in templates is what the figma-workflow skill does on every Figma session.
 
 ### Why the names don't match
 
-Because WordPress `theme.json` doesn't support responsive spacing. It can only hold one value per token. We use the desktop values since that's what the block editor renders at. Mobile differences are handled in the templates using different tokens from the same scale.
+Because WordPress `theme.json` doesn't support responsive spacing — one value per token. We use the desktop values since that's what the block editor renders at. Mobile differences are handled in templates using different tokens from the same scale.
 
-We didn't create separate `-mobile` tokens (like `spacing-150-mobile`) because the mobile values already exist at other positions on the scale. Adding duplicates would double the token count for no benefit.
+We didn't create separate `-mobile` tokens because the mobile values already exist at other positions on the scale. Adding duplicates would double the token count for no benefit.
 
 ## Typography
 

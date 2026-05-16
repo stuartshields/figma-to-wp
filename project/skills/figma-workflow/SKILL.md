@@ -1,118 +1,182 @@
 ---
 name: figma-workflow
-description: Project-specific Figma-to-code workflow. Block name gate, component/token maps, spacing translation, structure rules. Use alongside the global /figma skill when implementing from Figma designs.
+description: Figma-to-code workflow for WordPress blocks. MCP plumbing, block name gate, frame quality gate, component/token maps, pattern-vs-block branch, measurement-driven spec audit, mobile spacing. Folds the former global `/figma` MCP skill into a single project-scoped workflow.
 argument-hint: "[figma URL or block name]"
 disable-model-invocation: true
-allowed-tools: Read, Grep, Glob, Bash, Write, Edit, mcp__figma__get_design_context, mcp__figma__get_screenshot, mcp__figma__get_metadata, mcp__figma__get_variable_defs, mcp__figma__get_code_connect_map
+allowed-tools: Read, Grep, Glob, Bash, Write, Edit, mcp__figma__get_design_context, mcp__figma__get_screenshot, mcp__figma__get_metadata, mcp__figma__get_variable_defs, mcp__playwright__browser_navigate, mcp__playwright__browser_take_screenshot, mcp__playwright__browser_snapshot, mcp__playwright__browser_resize, mcp__playwright__browser_evaluate
 ---
+<!-- Last updated: 2026-05-16T14:00+10:00 -->
 
 # Skill: figma-workflow
 
 ## When to Use
 
-Use this skill when implementing UI from a Figma design in your project. This adds project-specific rules on top of the global `/figma` skill. Both should be active during Figma work.
+Use this skill when implementing UI from a Figma design in this project. It covers the full path: gating the request, pulling design context from the Figma Dev Mode MCP, translating tokens, writing code, and verifying parity against the Figma source.
 
-Invoke with `/figma-workflow [URL or block name]`.
+Invoke with `/figma-workflow [URL or block name]`. Use `$ARGUMENTS` as the URL or name; if empty, ask.
+
+Do NOT use this skill for general frontend work that does not involve a Figma design.
 
 ## Method
 
-### Step 0: Block Name Gate (Hard Prerequisite)
+The order matters. Each step is a gate; don't skip ahead.
 
-Before calling ANY Figma MCP tool (`get_design_context`, `get_metadata`, `get_screenshot`, `get_variable_defs`, or anything else), you must know which existing code-side component the Figma design corresponds to: the `wpb/*` block slug, the template part path, or "this is net-new, no existing equivalent."
+### Step 0 — Block Name Gate (hard prerequisite)
 
-If the user did not state it in their message, **stop and ask before touching any tool**. Do not guess from the Figma URL. Do not pull `get_metadata` "just to check." Do not pattern-match from a frame name you think you recognise. Designers' Figma naming does not always match the code naming. A Figma component called `Hero / Primary` might be `wpb/primary-hero`, or it might be a brand new variant that needs a new block. Only the user knows.
+Before calling any Figma MCP tool, you must know which existing code-side component the Figma design corresponds to: a `wpb/*` block slug, a template part path, a pattern, or "net-new."
 
-Ask in this shape:
-> Before I pull this from Figma, which of your blocks does it map to? Options I can see in `.claude/figma-component-map.md`: `wpb/primary-hero`, `wpb/secondary-hero`, `wpb/callout-card`, ... (list the plausible candidates). Or is this net-new?
+If the user did not state it, stop and ask:
 
-Only after the user answers should you proceed. If the answer is "net-new," confirm the target location (new block in `wp-blocks/blocks/`, new template part in `template-parts/components/`, or something else) before generating code.
+> Before I pull this from Figma, which of your blocks does it map to? Options I can see in `.claude/figma-component-map.md`: `wpb/...`, `wpb/...`. Or is this net-new?
 
-### Step 1: Stack Check
+Don't guess from the Figma URL. Don't pull `get_metadata` to peek. Don't pattern-match from a frame name. Designers' Figma naming does not always match code naming.
 
-Once you know the target component, confirm which stack the work lives in:
-- (a) new Gutenberg block (plugin + render file)
+If "net-new," confirm the target location before generating code (new block in `wp-blocks/blocks/`, new template part in `template-parts/components/`, new pattern in `<theme>/patterns/`, or something else).
+
+### Step 0a — Frame Quality Gate
+
+After the block name is set, sanity-check the Figma source. Reject any of the following before touching MCP:
+
+- **Anonymous layer names** in the target subtree (`Rectangle 1023`, `Frame 42`, `Group 17`). Anonymous layers produce garbage output — there is nothing semantic to name elements by.
+- **Non-Auto-Layout root frame.** Anything not in Auto Layout end-to-end produces absolute-positioning code. Ask the designer to convert to Auto Layout first.
+- **Instance-only target node.** `get_design_context` on an instance yields override-only data and misses the main component's props. If the user passed an instance URL, ask for the main component URL.
+- **Missing breakpoint variants** when a responsive block is in scope. If the Figma only has desktop, ask for the mobile/tablet variants before implementing.
+
+If any of these fail, explain what's wrong and ask the user to fix the Figma source or confirm proceeding with reduced fidelity expectations.
+
+### Step 1 — Pattern or Block?
+
+If the Figma frame is a section composed of existing blocks with no new behaviour and no new attributes (just a particular arrangement), it is a **pattern**, not a new block.
+
+| Signal | Likely outcome |
+|---|---|
+| New visual primitive, new attributes, new editor controls | new `wpb/*` block |
+| Existing blocks arranged in a particular layout, no new attributes | `register_block_pattern()` in `<theme>/patterns/` |
+| One existing block with a new visual variant only | `styles` array in the block's `block.json` + a SCSS rule |
+| Dynamic content surface (post meta, taxonomy, custom field) using stock blocks | Block Bindings — see `block-bindings/SKILL.md` |
+
+If pattern: skip the asset pipeline. Write a pattern PHP file in `<theme>/patterns/` with a docblock header (`Title`, `Slug`, `Categories`, `Block Types`, `Description`), and the content as static block markup. The token translation and spec audit steps below still apply.
+
+### Step 2 — Stack Check
+
+Confirm which stack the work lives in:
+
+- (a) new Gutenberg block (plugin + theme render file)
 - (b) existing block's render file in the theme
 - (c) shared template part in `template-parts/components/`
 - (d) header/footer modification
+- (e) pattern PHP file in `<theme>/patterns/`
 
-Ask the user if still ambiguous.
+Ask if still ambiguous.
 
-### Step 2: Read the Maps Before Generating Code
+### Step 3 — Read the Maps
 
-Before calling `get_design_context`, read both:
+Before any `get_design_context`, read both:
+
 - `.claude/figma-component-map.md` — block and template part catalogue
 - `.claude/figma-token-map.md` — design token translation table
 
-Grep for anything in Figma that looks like an existing entry. **Use existing components, do not invent parallel ones.**
+Grep for anything in Figma that looks like an existing entry. Use existing components; do not invent parallel ones.
 
-### Step 3: Structure First, Code Second
+### Step 4 — MCP Plumbing (call order matters)
 
-Call `get_metadata` for the Figma frame before `get_design_context`. List the layer hierarchy and identify which layers map to existing blocks or template parts. Wait for confirmation before generating code.
+MCP tools are mandatory. Never implement from memory.
 
-### Step 4: Prefer `get_design_context` over `get_screenshot`
+**Call order:**
 
-Screenshots are expensive in tokens and only needed for visual debugging when code output doesn't match intent. Do not fetch screenshots proactively.
+1. **`get_metadata`** first if the target is a large frame or component set. Returns a sparse XML outline so you can pick the right child nodes. Skip when the target is a single small node.
+2. **`get_design_context`** on the **component definition node**, not on an instance. Instances drag in parent context, inflate the response, and miss the main component's props. If you only have an instance URL, ask for the definition or use `get_metadata` to navigate to it.
+3. **Declare the variable mode** when the design has separate mobile/tablet/desktop variable modes. Pulling a mobile node without specifying the mobile mode returns desktop values silently. State the mode you're pulling at the top of your reasoning so the user can correct you if wrong.
+4. **`get_variable_defs`** when the design uses Figma variables/tokens. Map to the token system, never hardcode.
+5. **`get_screenshot`** only when the implementation diverges from the design and you need a visual reference to debug (Step 9). Not for initial implementation.
 
-### Step 5: Match Figma's Structure
+**If any tool call fails or returns incomplete data:** tell the user. Do not fill gaps from assumptions.
 
-Do not "clean up" nested frames, inline single-child wrappers, or replace divs with semantic tags unless Figma's layer already uses that role. Ugly Figma structure = ugly code structure, by design. The exception is when an entire sub-tree maps to an existing component (e.g., a button). Use the component instead.
+**If `get_design_context` truncates** on a legitimately large but valid component, raise `MAX_MCP_OUTPUT_TOKENS` in the Claude Code env rather than fanning out into many small calls. Most truncations mean the wrong node was pulled — `get_metadata` first.
 
-### Step 6: Never Hardcode Design Values
+### Step 5 — Responsive Variants
 
-Every colour, spacing, font size, radius, shadow, and dimension must come from the token map. If Figma returns a raw hex or pixel value, translate it to the matching named token before writing (for example `#f2796c` becomes `peach`, `12px` becomes `gap-150`). If a Figma value has no matching token, flag it to the user. Do not invent a raw value.
+If the design has separate mobile/tablet/desktop variants (variable modes, frame siblings, or component variants):
 
-### Mobile vs Desktop Spacing (Critical)
+1. **Identify all breakpoint variants before writing code.** Use `get_metadata` on the parent if needed.
+2. **Fetch `get_design_context` for every breakpoint** with the matching variable mode declared. Don't fetch desktop and guess mobile.
+3. **Build a comparison table** of values that differ vs values that stay the same. This is the responsive spec.
 
-Figma's spacing variables have different values at mobile vs desktop. The project's `theme.json` only holds desktop values because WordPress has no responsive spacing presets. For example, `spacing/150` in Figma may be `12px` on desktop and `8px` on mobile, which translates to `gap-100` (not `gap-150`) when targeting mobile.
+This gate is blocking. Do not write responsive CSS without MCP data for every breakpoint the design targets.
 
-See `.claude/figma-token-map.md` "Spacing — Mobile ≠ Desktop" for the per-token reference. The mapping rule below is the single most common source of drift. Do not skip it.
+### Step 6 — Match Figma's Structure
 
-#### Rule
+Compare DOM structure against Figma's layer hierarchy. Do not "clean up" nested frames, inline single-child wrappers, or replace `div` with semantic tags unless Figma's layer already uses that role. Ugly Figma structure = ugly code structure, by design.
 
-Do NOT create `-mobile` suffix spacing tokens. The existing spacing scale already covers all mobile values at different positions on the scale. Find the matching existing token for the Figma mobile pixel value.
+Exception: when an entire sub-tree maps to an existing component (button, icon, expandable body, art-direction-image, modal, etc.), use the component instead — see `figma-component-map.md`.
 
-#### How to Apply
+### Step 7 — Never Hardcode Design Values
 
-1. When implementing templates, check the Figma MCP output's fallback values at each breakpoint (e.g., `var(--spacing/150, 8px)` — the `8px` is the mobile-evaluated value).
-2. Find the matching existing `--spacing-*` token for that pixel value at each breakpoint.
-3. Use the project's responsive prefix mapping: base = mobile, `sm:` = tablet (640px+), `lg:` = laptop (1024px+), `2xl:` = desktop (1440px+).
-4. Only add a prefix when the Figma value changes at that breakpoint. If tablet and laptop share the same value, use `sm:` and skip `lg:`.
-5. Example: if a gap is 8px mobile, 12px tablet, 12px laptop, 12px desktop → `gap-100 sm:gap-150` (skip `lg:` and `2xl:` since the value doesn't change after tablet).
+Every colour, spacing, font size, radius, shadow, and dimension must come from `figma-token-map.md`. If Figma returns a raw hex or pixel value, translate to the matching named token (`#f2796c` → `peach`, `12px` → `gap-150`). If a Figma value has no matching token, flag it to the user — don't invent a raw value.
 
-#### Desktop ↔ Mobile Mapping Table
+For the desktop ↔ mobile spacing translation rule, see `figma-token-map.md`. That table is the single source of truth — do not duplicate it here.
 
-| Figma Variable | Desktop Value | Desktop Token | Mobile Value | Mobile Token |
-|---|---|---|---|---|
-The exact desktop ↔ mobile mapping is project-specific. Build a table like this for your token scale and keep it next to the spacing rule:
+### Step 8 — Measurement-Driven Spec Audit
 
-| Figma Variable | Desktop Value | Desktop Token | Mobile Value | Mobile Token |
-|---|---|---|---|---|
-| `spacing/150` | 12px | `*-150` | 8px | `*-100` |
-| `spacing/200` | 16px | `*-200` | 12px | `*-150` |
-| ... | ... | ... | ... | ... |
+After writing the CSS/SCSS, **measure the rendered output and compare to the MCP data**. This is a numerical check, not a visual one — visual diffs are unreliable due to font hinting and anti-aliasing.
 
-This mapping applies to ALL spacing utilities (`gap-`, `p-`, `m-`, `px-`, `py-`, etc.).
+1. **Render the block in a deterministic environment.** Local dev server (`wp-now`, the project's `npm run start`), or the Playground PR preview if configured (see `project/github-templates/`).
+2. **Extract computed styles** via `mcp__playwright__browser_evaluate`. For each audited element, return measured values:
 
-Tablet and laptop intermediate values are not in the table — extract them from Figma per-component using the MCP fallback values.
+	```js
+	const el = document.querySelector('.target');
+	const cs = getComputedStyle(el);
+	const rect = el.getBoundingClientRect();
+	return {
+		fontSize: cs.fontSize,
+		lineHeight: cs.lineHeight,
+		paddingTop: cs.paddingTop,
+		paddingRight: cs.paddingRight,
+		gap: cs.gap,
+		borderRadius: cs.borderRadius,
+		width: rect.width,
+		height: rect.height,
+	};
+	```
 
-#### Why
+3. **Compare numerically against MCP values** from `get_design_context`. Present a verification table:
 
-WordPress theme.json doesn't support responsive spacing. Creating duplicate `-mobile` tokens would cause token sprawl and diverge from the WP preset system. The community pattern (both WordPress and Tailwind) is to use existing tokens with responsive prefixes in markup.
+	```
+	| Element  | Property    | Figma (desktop) | Measured | Match?     |
+	|----------|-------------|-----------------|----------|------------|
+	| .heading | font-size   | 48px            | 48px     | ✅         |
+	| .content | padding-top | 64px            | 60px     | ❌ (-4px)  |
+	```
 
-### Never Reinvent These
+4. **Any non-match is a bug.** Fix and re-measure. Do not skip a row because "it looks right visually."
+5. **Repeat at every breakpoint** the design targets. Resize via `browser_resize` between rows.
 
-When Figma shows something the project already has a shared component for, use the existing component instead of hand-rolling. Maintain a list in your component map of these "use existing" cases. Common categories worth tracking:
+**Local fallback:** if no rendered URL is available, fall back to re-reading the CSS and comparing token names against MCP output. Flag visual verification as deferred in your summary so the user knows it hasn't actually been measured.
 
-- Buttons (CTA pills, with or without icon)
-- Icons (inline SVG renderer)
-- Expandable body text with a "Read more" toggle
-- Responsive images with separate desktop and mobile crops
-- Modals (profile bio, lightbox, etc.)
-- Breadcrumbs
-- Header / nav (modify, do not recreate)
-- Footer menu columns
+### Step 9 — Visual Verification (only on mismatch)
 
-Each of these typically lives in `template-parts/components/` (or wherever your theme keeps shared partials). The component map should record the exact file path so the skill can find it without guessing.
+Screenshots are only worth fetching when the measured audit looks fine but the design still doesn't match — i.e. there's a layout or composition bug the numbers don't catch.
+
+- Call `get_screenshot` from Figma for the reference image.
+- Take a browser screenshot via `mcp__playwright__browser_take_screenshot`.
+- Compare side-by-side. Iterate.
+
+**Visual iteration limit: 3 rounds.** After 3 compare-fix-screenshot cycles without parity, stop. Report what matches, what doesn't, and what you tried. Remaining deltas may need designer input or are platform-specific rendering differences.
+
+## Supporting Notes
+
+### Never Reinvent
+
+When Figma shows something the project already has a shared component for, use the existing component. See `figma-component-map.md` for the canonical list (buttons, icons, expandable text, art-directed responsive images, modals, breadcrumbs, header/nav, footer). The exact filenames and APIs live there — do not duplicate them in this skill.
+
+### Editor Preview Parity
+
+When building a new block, the editor preview (`edit.js`) and the front-end render (`render.php` / theme template part) must produce equivalent markup. Two acceptable patterns:
+
+1. **Shared PHP helper** called from both `render.php` and the editor's `<ServerSideRender>`.
+2. **`edit.js` mirrors `render.php` markup exactly** — class names, structure, attributes. Run Step 8 against both surfaces.
+
+The single most common Gutenberg fidelity bug is `edit.js` quietly drifting from the front-end render. The spec audit catches it if you actually run it on both surfaces. See `block-dev/SKILL.md` for the asset pipeline and editor-vs-frontend CSS reset rules.
 
 ### Keeping the Maps Fresh
 
@@ -121,35 +185,43 @@ The component and token maps are generated by scanning the codebase. Re-run the 
 - A new block is added to `wp-blocks/blocks/`
 - A block is renamed or removed
 - A new shared component lands in `template-parts/components/`
-- Design tokens change (`theme.json`, `theme-variables.css`, or your design tokens doc is updated)
+- Design tokens change (`theme.json`, `theme-variables.css`, or `DESIGN-TOKENS.md` is updated — see `design-tokens/SKILL.md`)
 - Designers ship a redesign that introduces new Figma component names
 
-Stale maps lead Claude to invent components that already exist, which is the problem the maps are there to prevent.
-
-### MCP Fallback Value Caveat
-
-Don't take Figma MCP fallback values at face value. Spacing variable fallbacks are almost always desktop-mode evaluations, even when pulling a tablet or mobile frame.
-
-1. Always pull the **component definition node**, not the instance node. The component definition resolves variables at the correct mode for that variant.
-2. Sanity-check pixel values against the frame width. If 6 tiles with 40px padding each need to fit in 640px and they can't, the values are wrong.
-3. Cross-reference the responsive spacing mapping table in the "Mobile vs Desktop Spacing" section above.
-4. When the MCP values don't add up, ask the user for the actual values from Figma's inspect panel rather than re-pulling the same node.
+Stale maps lead Claude to invent components that already exist — the problem the maps exist to prevent.
 
 ### Check All Breakpoints
 
-When touching a block's styles, check ALL breakpoints (mobile, tablet, laptop, desktop) against Figma, not just the breakpoint directly related to the change. After making style changes, fetch the Figma frames for all four breakpoints and compare key properties (positioning, sizing, gradients, padding) against the front-end at each breakpoint. Fix mismatches found, even if they're in code you didn't originally change.
+When touching a block's styles, check all four breakpoints (mobile, tablet, laptop, desktop) against Figma, not just the one related to the change. After making style changes, run Step 5 (responsive variants) and Step 8 (measurement audit) at each breakpoint. Fix mismatches even when they're in code you didn't originally change.
 
 ### No Desktop-as-Mobile Image Fallback
 
-Never substitute the desktop image URL as a fallback when the mobile image is missing. Pass the mobile URL as-is (even if empty/false) and let the rendering component decide what to do. When wiring up art-direction-image or any responsive image partial, pass `mobile_url` without `?: $desktop_url` fallbacks. If no mobile image exists, the component renders a plain `<img>` with just the desktop source (which the `<picture>` element handles correctly via its default `<img>`).
+Never substitute the desktop image URL as a fallback when the mobile image is missing. Pass the mobile URL as-is (even if empty/false) and let the rendering component decide what to do. When wiring `art-direction-image` or any responsive image partial, pass `mobile_url` without `?: $desktop_url` fallbacks.
+
+### Token Hygiene (long Figma sessions)
+
+The Figma MCP runs as a long-lived server. Tools and instructions stay in context every turn, and tool responses are large. Mitigations:
+
+- **Call by deep node id, not by page.** Pasting a deep Figma URL with `node-id=...` cuts most of the cost.
+- **`get_metadata` first when unsure.** Sparse XML, then a targeted `get_design_context` for the few nodes that need code. 5–10× cheaper than deep-fetch first.
+- **Don't re-pull the same node** to double-check. You already have the result.
+- **Skip `get_screenshot`** unless you're in Step 9 (visual verification on mismatch).
+- **Cache the initial Figma screenshot** if you needed one. Don't re-fetch on every iteration cycle.
+- **`MAX_MCP_OUTPUT_TOKENS`** raises the truncation ceiling — use sparingly, it also raises cost.
+- **Long session drifting away from Figma work?** Start a fresh session for the next task to keep context clean.
 
 ## Rules
 
 - **Block name is non-negotiable.** Never call a Figma MCP tool without knowing the target code-side component.
-- **Maps before code.** Always read both map files before generating any implementation.
-- **Token map is the translation layer.** Raw Figma values (hex, px) must be translated through the token map.
-- **Mobile spacing differs from desktop.** The mapping table in the "Mobile vs Desktop Spacing" section above is mandatory reading for every responsive implementation.
-- **Reuse existing components.** The "Never reinvent" list is a hard constraint, not a suggestion.
-- **MCP values lie about breakpoints.** Pull component definition nodes, not instances. Sanity-check against frame dimensions.
+- **Frame quality is non-negotiable.** Anonymous layers, non-Auto-Layout roots, instance-only nodes, and missing breakpoint variants are gates, not warnings.
+- **Component definition nodes, not instances.** Pull the main component, not an instance, for `get_design_context`.
+- **Variable mode declared.** When the design uses mobile/tablet/desktop modes, state which mode you're pulling.
+- **Maps before code.** Always read both map files before generating implementation.
+- **Token map is the translation layer.** Raw Figma values (hex, px) translate through `figma-token-map.md`.
+- **Reuse existing components.** The "Never reinvent" list in the component map is a hard constraint, not a suggestion.
+- **Measure, don't squint.** The spec audit is `getComputedStyle` against MCP values. Text comparison is the fallback when no rendered URL exists.
+- **Screenshots on mismatch only.** Visual verification is Step 9, not Step 1.
 - **Check all four breakpoints.** Not just the one you're changing.
-- **No desktop fallback for mobile images.** Pass empty/false, never substitute desktop URL.
+- **If the user says it doesn't look right, they're right.** Don't explain why the CSS "should" work. Look at what's rendering.
+- **3-round iteration limit on visual fixes.** Stop and report after 3 cycles without parity.
+- **MCP output is a reference, not final code.** Translate to project conventions, framework, and existing components.

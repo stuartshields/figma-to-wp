@@ -1,3 +1,5 @@
+<!-- Last updated: 2026-05-16T14:00+10:00 -->
+
 # Project Conventions (example)
 
 > Replace this header with your project name. The conventions below are a worked example. Adapt them to your stack and remove anything that doesn't apply.
@@ -80,9 +82,13 @@ When shared React components render BEM child elements (e.g. `__items` inside `_
 
 When a shared component needs to generate BEM child classes, accept a `blockClass` prop (the base class) and derive children from it. Check the compiled CSS output matches the DOM classes before shipping.
 
-## Figma → Code Workflow
+## Skills
 
-**Full workflow:** `/figma-workflow` skill. Covers block name gate, map files, token translation, mobile spacing, structure rules, and reusable component list.
+- **`/figma-workflow`** — full Figma-to-code path: block name gate, frame quality gate, pattern-vs-block branch, MCP plumbing, token translation, measurement-driven spec audit. The former global `/figma` skill is folded into this one.
+- **`/block-dev`** — block conventions: editor UX, asset pipeline, button patterns, coding standards, editor-vs-frontend parity.
+- **`/block-bindings`** — for new dynamic content surfaces (post meta, taxonomy, custom fields) sourced through stock core blocks. Prefer over a custom `render_callback` block.
+- **`/interactivity-api`** — for new block frontend behaviour (toggles, accordions, modals). Prefer over hand-rolled `view.js` + webpack wiring.
+- **`/design-tokens`** — when Figma variables change. Re-runs 10up's `figma-to-wordpress-theme-json-exporter`, updates `theme.json`, Tailwind aliases in `theme-variables.css`, then refreshes the maps below.
 
 Key references: `.claude/figma-component-map.md` (block catalogue), `.claude/figma-token-map.md` (token translation).
 

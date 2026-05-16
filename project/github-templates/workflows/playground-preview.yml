@@ -1,0 +1,34 @@
+# WordPress Playground PR preview
+#
+# Copy to .github/workflows/playground-preview.yml in your repo.
+# Adjust `plugin-path` / `theme-path` to match your layout.
+# Customise playground-blueprint.json with the block markup you want to preview.
+#
+# This action posts a "Preview in Playground" link as a PR comment. The
+# Playground boot loads your plugin + theme from the PR head and seeds a
+# test page via the blueprint, giving reviewers a deterministic rendered URL
+# for the measurement-driven spec audit (see figma-workflow/SKILL.md Step 8).
+
+name: Playground PR Preview
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  playground-preview:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Add Playground preview to PR
+        uses: WordPress/action-wp-playground-pr-preview@c8607529dac8d2bf9a1e8493865fc97cd1c3c87b # v2
+        with:
+          # Path(s) to the plugin and theme being previewed. Match your repo layout.
+          plugin-path: content/mu-plugins/wp-blocks
+          theme-path: content/themes/wp-theme
+          # Blueprint that seeds a preview page with the block under change.
+          blueprint-path: .github/playground-blueprint.json

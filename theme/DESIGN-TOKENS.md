@@ -1,4 +1,4 @@
-<!-- Last updated: 2026-05-16T14:00+10:00 -->
+<!-- Last updated: 2026-05-16T17:00+10:00 -->
 
 # Design Tokens
 
@@ -8,19 +8,26 @@ How the design system connects Figma to the front end, and what you need to know
 
 ## Token Flow
 
-Figma variables are the source of truth. They flow into two parallel systems:
+Figma variables are the source of truth. 10up's `figma-to-wordpress-theme-json-exporter` plugin emits a `theme.json` fragment under `settings.custom.*`. That's the canonical landing zone, because nesting under `settings.custom` is what gives WordPress permission to emit project-specific CSS variables (`--wp--custom--<group>--<name>`). The well-known top-level `settings.color` / `settings.spacing` / `settings.typography` (which emit `--wp--preset--*` variables and populate the editor's colour/spacing pickers) are written by the exporter too when a Figma collection maps cleanly to a WP preset bucket, but most project tokens live under `custom`.
 
 ```
 Figma variables
     |
-    +-- theme.json (WordPress presets)  -->  --wp--preset--spacing--150, --wp--preset--color--peach, etc.
+    +-- theme.json
+    |     settings.color.palette       --> --wp--preset--color--peach    (editor presets + Global Styles)
+    |     settings.spacing.spacingSizes --> --wp--preset--spacing--150   (editor presets + Global Styles)
+    |     settings.custom.color.peach   --> --wp--custom--color--peach   (project-specific tokens)
+    |     settings.custom.spacing.150   --> --wp--custom--spacing--150
     |
-    +-- theme-variables.css (@theme)    -->  --spacing-150, --color-peach, etc.  -->  Tailwind utilities (gap-150, bg-peach)
+    +-- assets/theme-variables.css (@theme)
+          --color-peach: var(--wp--custom--color--peach);
+          --spacing-150: var(--wp--custom--spacing--150);
+          (Tailwind utilities: gap-150, bg-peach)
 ```
 
-Both systems define the same values. `theme.json` drives the block editor and WP's Global Styles. `theme-variables.css` drives Tailwind utility classes used in templates and static HTML.
+`theme.json` drives the block editor and WP's Global Styles. `theme-variables.css` aliases the WP custom properties to short Tailwind-friendly names used in templates and static HTML. There is one underlying value per token; the Tailwind file is an alias layer, not a duplicate definition.
 
-If a token changes in Figma, update both files.
+If a token changes in Figma, re-run the exporter (see `design-tokens/SKILL.md`) and then refresh the alias file and the maps.
 
 ## Spacing Scale
 
@@ -61,13 +68,13 @@ This is the part that catches people out.
 
 Figma's spacing variables have two modes - desktop and mobile. The same variable name (`spacing/150`) resolves to different pixel values depending on the mode. Our `theme.json` and `theme-variables.css` only hold the **desktop** values, because WordPress doesn't support responsive spacing presets.
 
-So when you're building a mobile layout and Figma says `spacing/150`, you can't use `gap-150` — that's the desktop value (12px). The mobile value for that same Figma variable is 8px, which is `gap-100` on our scale.
+So when you're building a mobile layout and Figma says `spacing/150`, you can't use `gap-150`. That's the desktop value (12px). The mobile value for that same Figma variable is 8px, which is `gap-100` on our scale.
 
-**The mapping table lives in `.claude/figma-token-map.md` under "Spacing — Mobile ≠ Desktop."** That is the single source of truth — applying it in templates is what the figma-workflow skill does on every Figma session.
+**The mapping table lives in `.claude/figma-token-map.md` under "Spacing: Mobile ≠ Desktop."** That is the single source of truth. Applying it in templates is what the figma-workflow skill does on every Figma session.
 
 ### Why the names don't match
 
-Because WordPress `theme.json` doesn't support responsive spacing — one value per token. We use the desktop values since that's what the block editor renders at. Mobile differences are handled in templates using different tokens from the same scale.
+Because WordPress `theme.json` doesn't support responsive spacing. One value per token. We use the desktop values since that's what the block editor renders at. Mobile differences are handled in templates using different tokens from the same scale.
 
 We didn't create separate `-mobile` tokens because the mobile values already exist at other positions on the scale. Adding duplicates would double the token count for no benefit.
 
@@ -82,7 +89,7 @@ One font family throughout - Neulis Neue.
 | Semi-bold | 600 | Headings |
 | Extra Bold | 800 | Eyebrow labels |
 
-Font sizes have dedicated tokens (`text-h2`, `text-body`, `text-caption`) defined in `theme-variables.css`. Mobile typography uses `-mobile` suffix tokens (`text-h2-mobile`, `text-display-mobile`) because these don't map cleanly to other positions on the type scale the way spacing does. Unlike spacing, always use a `-mobile` token for mobile type — never repurpose a desktop token that happens to share the same pixel value.
+Font sizes have dedicated tokens (`text-h2`, `text-body`, `text-caption`) defined in `theme-variables.css`. Mobile typography uses `-mobile` suffix tokens (`text-h2-mobile`, `text-display-mobile`) because these don't map cleanly to other positions on the type scale the way spacing does. Unlike spacing, always use a `-mobile` token for mobile type. Never repurpose a desktop token that happens to share the same pixel value.
 
 | Mobile token | Value | Desktop equivalent |
 |--------------|-------|--------------------|

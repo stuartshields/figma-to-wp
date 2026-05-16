@@ -5,7 +5,7 @@ argument-hint: "[block-slug]"
 disable-model-invocation: true
 allowed-tools: Read, Grep, Glob, Bash, Write, Edit
 ---
-<!-- Last updated: 2026-05-16T14:00+10:00 -->
+<!-- Last updated: 2026-05-16T17:00+10:00 -->
 
 # Skill: block-dev
 
@@ -33,11 +33,11 @@ Patterns to look for in the reference:
 3. **Always ask:** Before building a new block's editor UI, ask the user: "Should [field X] be inline in the block or in the sidebar?" when the placement isn't obvious. Default preference is always inline, but if the user explicitly requests sidebar placement, respect that.
 4. **Style toggles match WP core:** Per-item style selectors (e.g. button fill/outline) should mimic core's block styles panel. Side-by-side preview boxes with labels underneath, not dropdowns or icon-only toggles. See `components/button-style-toggle/index.js`.
 5. **Editor sizing uses front-end mobile values:** The editor canvas is narrower than desktop, so editor SCSS should use the front-end's mobile breakpoint values (e.g. `12px 18px` padding, `16px` font) not desktop values.
-6. **Pill buttons with RichText + siblings:** When a button has both RichText and extra elements (chevrons, icons), put pill styling (background, border, border-radius, padding) on the wrapper div. The RichText span and siblings render inside. Color goes on the wrapper too so all children inherit via `currentColor`.
+6. **Pill buttons with RichText + siblings:** When a button has both RichText and extra elements (chevrons, icons), put pill styling (background, border, border-radius, padding) on the wrapper div. The RichText span and siblings render inside. Colour goes on the wrapper too so all children inherit via `currentColor`.
 7. **Front-end styles leak into the editor.** WordPress loads `style` (from `block.json`) in both the front-end and the editor. Front-end layout constraints (max-width, min-width, fixed heights, media queries) will apply in the editor canvas. Always check if `style.scss` rules need to be reset in `editor.scss`, especially responsive layout properties that don't suit the narrow editor canvas.
 8. **Editor preview markup must mirror the front-end render.** The single most common Gutenberg fidelity bug is `edit.js` quietly drifting from the theme template part. Two acceptable patterns:
 	- **Shared PHP helper** called from both `render.php` and the editor's `<ServerSideRender>`.
-	- **`edit.js` mirrors `render.php` markup exactly** — class names, structure, attributes. Run the figma-workflow spec audit (Step 8) against both surfaces.
+	- **`edit.js` mirrors `render.php` markup exactly**: class names, structure, attributes. Run the figma-workflow spec audit (Step 8) against both surfaces.
 	When in doubt, prefer the shared-helper path. Pure client-side `edit.js` reimplementations always drift over time.
 
 ### Modern frontend behaviour: Interactivity API
@@ -52,25 +52,25 @@ For blocks whose content is sourced from post meta, taxonomy terms, or custom fi
 
 When creating a new block, its frontend assets (style.scss) must be wired into the build and registration pipeline. Missing any step means the block's frontend CSS won't load:
 
-1. **`view.js`** — Create `blocks/<slug>/view.js` that imports `./style.scss`. This is the webpack entry point for frontend assets.
-2. **`webpack.config.js`** — Add `'blocks/<slug>/view': './blocks/<slug>/view.js'` to the `entry` object.
-3. **`block.json`** — Add both `"style": "wpb-blocks-<slug>-view"` and `"viewScript": "wpb-blocks-<slug>-view"` so WordPress knows which handles to enqueue.
-4. **`inc/assets.php`** — Add `register_script_from_build_asset('wpb-blocks-<slug>-view', 'blocks/<slug>/view.js', true);` in `register_block_assets()` so the handle resolves to the built file.
-5. **Verify** — After `npm run build`, check that `assets/build/blocks/<slug>/` contains `view.js`, `style-view.css`, and `view.asset.php`.
+1. **`view.js`**. Create `blocks/<slug>/view.js` that imports `./style.scss`. This is the webpack entry point for frontend assets.
+2. **`webpack.config.js`**. Add `'blocks/<slug>/view': './blocks/<slug>/view.js'` to the `entry` object.
+3. **`block.json`**. Add both `"style": "wpb-blocks-<slug>-view"` and `"viewScript": "wpb-blocks-<slug>-view"` so WordPress knows which handles to enqueue.
+4. **`inc/assets.php`**. Add `register_script_from_build_asset('wpb-blocks-<slug>-view', 'blocks/<slug>/view.js', true);` in `register_block_assets()` so the handle resolves to the built file.
+5. **Verify**. After `npm run build`, check that `assets/build/blocks/<slug>/` contains `view.js`, `style-view.css`, and `view.asset.php`.
 
 Editor JS and SCSS are loaded automatically via `autoloadBlocks` in `assets/src/editor.js` (discovers all `blocks/*/index.js` via `require.context`). No manual wiring needed for editor assets.
 
 ### Shared Editor Data
 
-- A localized global (e.g. `wpbBlocksData`) is set via `wp_localize_script` in `inc/assets.php`. Add new keys there for any theme asset URLs needed in the editor. Document what the global exposes so block editors know what's available.
+- A localised global (e.g. `wpbBlocksData`) is set via `wp_localize_script` in `inc/assets.php`. Add new keys there for any theme asset URLs needed in the editor. Document what the global exposes so block editors know what's available.
 
 ### Reusable Components
 
 Live in `wp-blocks/components/{name}/index.js`. Typical examples a project might have:
 
-- `button-link` — RichText + LinkControl popover for inline button editing
-- `button-group-editor` — Multi-button editor with inline text + URL popovers, toolbar link button (Cmd+K), configurable max buttons, fill/outline style support
-- `button-style-toggle` — WP core-style fill/outline toggle for sidebar
+- `button-link`. RichText + LinkControl popover for inline button editing
+- `button-group-editor`. Multi-button editor with inline text + URL popovers, toolbar link button (Cmd+K), configurable max buttons, fill/outline style support
+- `button-style-toggle`. WP core-style fill/outline toggle for sidebar
 
 The exact component names and APIs are project-specific. Grep the components folder before building anything new.
 
@@ -134,7 +134,7 @@ if ( ! empty( $first_button['text'] ) && ! empty( $first_button['url'] ) ) {
 ### Coding Standards
 
 1. **No phpcs:ignore:** Never suppress PHPCS rules. If output triggers an escaping warning, fix it properly. Escape at point of output or construct attributes manually.
-2. **No double sanitization, escape at output only:** Don't sanitize text attributes (e.g. `sanitize_text_field()`) in `render_callback` / namespace.php when the template already escapes them at output (`esc_html()`, `wp_kses()`, `esc_attr()`). Block attributes come from the editor's saved post content, not raw user input. The template's output escaping is the real security gate. Pass plain text attributes through raw; escape once in the template. Use `esc_html()` for plain-text fields; reserve `wp_kses()` for fields that intentionally allow specific HTML tags (e.g. headings permitting `<br>` or `<strong>`).
+2. **No double sanitisation, escape at output only:** Don't sanitise text attributes (e.g. `sanitize_text_field()`) in `render_callback` / namespace.php when the template already escapes them at output (`esc_html()`, `wp_kses()`, `esc_attr()`). Block attributes come from the editor's saved post content, not raw user input. The template's output escaping is the real security gate. Pass plain text attributes through raw; escape once in the template. Use `esc_html()` for plain-text fields; reserve `wp_kses()` for fields that intentionally allow specific HTML tags (e.g. headings permitting `<br>` or `<strong>`).
 3. **No `get_block_wrapper_attributes()`:** Build wrapper attributes manually. Escape at point of output, not in variable assignment. Pattern:
    ```php
    $wrapper_class = $wrapper_attributes['class'];
@@ -151,7 +151,7 @@ if ( ! empty( $first_button['text'] ) && ! empty( $first_button['url'] ) ) {
 10. **Multiline arrays when wide:** PHP arrays with 3+ keys per element, or any array where a single line exceeds ~100 characters, must use one key-value pair per line. Short arrays (1-2 simple keys) can stay on one line.
 11. **Use `data-` attributes for JS-PHP DOM contracts:** Front-end JS that reads content from PHP-rendered templates must select elements via `data-` attributes (e.g. `data-profile-name`), never tag selectors, sibling combinators, or style matching. The `data-` attribute is the explicit contract between PHP output and JS behaviour.
 12. **Pre-assign defaults, drop the `else`:** When a variable is assigned in every branch of an if/elseif/else, pre-declare it with the most common value before the conditional and drop the final `else`. Only keep branches that override the default.
-13. **No em-dashes in inline code comments:** Don't use `—` in `//` or `/* */` comments. Use a period, a comma, or parentheses to break a sentence instead. This rule applies to code comments only, not to markdown docs or user-facing text.
+13. **No em-dashes.** See the project-wide writing convention in `CLAUDE.md` (Writing style). This applies in code comments too; use a period, a comma, or parentheses instead.
 
 ## Rules
 
@@ -159,4 +159,4 @@ if ( ! empty( $first_button['text'] ) && ! empty( $first_button['url'] ) ) {
 - **Inline editing is the default.** Sidebar is for settings only.
 - **Asset pipeline has 4 required steps.** Missing any one means broken frontend CSS.
 - **Buttons are arrays.** Never convert the `buttons` attribute to/from object format.
-- **Escape once at output.** Do not double-sanitize in namespace.php and template.
+- **Escape once at output.** Do not double-sanitise in namespace.php and template.

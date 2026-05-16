@@ -1,4 +1,5 @@
-<!-- Last updated: 2026-05-16T14:00+10:00 -->
+<!-- TEMPLATE: when you copy this file to .claude/CLAUDE.md, reset the Last updated stamp below to today's date. It's tracked by the staleness rule, and a stale template date pollutes that check. -->
+<!-- Last updated: 2026-05-16T17:00+10:00 -->
 
 # Project Conventions (example)
 
@@ -8,13 +9,15 @@ Classic WordPress site: custom block plugin (`wp-blocks`) plus custom theme (`wp
 
 ## Stack
 
-- **WordPress** with custom mu-plugin for blocks and custom theme for rendering
+- **WordPress 6.6+** baseline. 6.9+ unlocks the Block Bindings dropdown UI (`get_fields_list`) and `supports.interactivity: { clientNavigation: true }` for the Interactivity API router. The `/block-bindings` and `/interactivity-api` skills gate those behind feature checks so 6.6–6.8 sites still load.
+- **PHP 7.4+** (typed params, return types, null-coalescing).
+- Custom mu-plugin for blocks and custom theme for rendering
 - **Gutenberg** block editor (block.json v3, API v3, dynamic rendering)
-- **Tailwind 4** for styling (not Tailwind 3 — syntax differs, see Figma section below)
+- **Tailwind 4** for styling (not Tailwind 3; syntax differs, see Figma section below)
 - **PHP** for templates, renders, and server-side logic
 - **JS/JSX** for block editor UI only
-- **Extended Template Parts** plugin — parameterized `get_extended_template_part()` with `$this->vars[...]` inside templates
-- **No ACF** — never use `get_field()`, `the_field()`, or assume ACF is available
+- **Extended Template Parts** plugin: parameterised `get_extended_template_part()` with `$this->vars[...]` inside templates
+- **No ACF**. Never use `get_field()`, `the_field()`, or assume ACF is available
 
 ## Where things live
 
@@ -55,7 +58,7 @@ get_extended_template_part( 'components/animated-button', '', [
 ] );
 ```
 
-Every shared component in `template-parts/components/` documents its expected variables in a header docblock. Read the docblock before including a component — do not guess at parameter names.
+Every shared component in `template-parts/components/` documents its expected variables in a header docblock. Read the docblock before including a component. Do not guess at parameter names.
 
 ## Block conventions
 
@@ -82,13 +85,23 @@ When shared React components render BEM child elements (e.g. `__items` inside `_
 
 When a shared component needs to generate BEM child classes, accept a `blockClass` prop (the base class) and derive children from it. Check the compiled CSS output matches the DOM classes before shipping.
 
+## Writing style
+
+These rules apply to every surface Claude writes for this project: code, code comments, markdown docs, commit messages, PR descriptions, chat responses, generated UI copy.
+
+- **British English spelling.** colour, behaviour, organise, customise, recognise, analyse, specialise, centre, licence (noun) / license (verb), grey, programme (for a TV/event programme; "program" only for software). WordPress core APIs keep their American spellings (`add_color_palette`, `register_block_pattern_category`); never rename a core function. The rule is about prose, identifiers you create, comments, and UI copy.
+- **No em-dashes (long dash).** Use a full stop, a comma, parentheses, or a colon to break a sentence. The long dash reads as AI signature even when otherwise grammatical. Applies in code comments too. Hyphens in compound modifiers (`opt-in`, `read-only`) are fine; en-dashes for numeric ranges (`6.6 to 6.8`, written as words) are fine. The rule targets the long horizontal dash specifically.
+- **No emojis** unless the user explicitly asks for them, or you are matching an established pattern in the file you are editing (status icons in tables, etc.).
+- **No filler openers** like "Great question,", "Certainly,", "I'd be happy to". Answer the question.
+- **Match the tone of the surrounding text.** Code comments in this project are casual and short; PR descriptions are matter-of-fact. Don't write marketing copy in either.
+
 ## Skills
 
-- **`/figma-workflow`** — full Figma-to-code path: block name gate, frame quality gate, pattern-vs-block branch, MCP plumbing, token translation, measurement-driven spec audit. The former global `/figma` skill is folded into this one.
-- **`/block-dev`** — block conventions: editor UX, asset pipeline, button patterns, coding standards, editor-vs-frontend parity.
-- **`/block-bindings`** — for new dynamic content surfaces (post meta, taxonomy, custom fields) sourced through stock core blocks. Prefer over a custom `render_callback` block.
-- **`/interactivity-api`** — for new block frontend behaviour (toggles, accordions, modals). Prefer over hand-rolled `view.js` + webpack wiring.
-- **`/design-tokens`** — when Figma variables change. Re-runs 10up's `figma-to-wordpress-theme-json-exporter`, updates `theme.json`, Tailwind aliases in `theme-variables.css`, then refreshes the maps below.
+- **`/figma-workflow`**. Full Figma-to-code path: block name gate, frame quality gate, pattern-vs-block branch, MCP plumbing, token translation, measurement-driven spec audit. The former global `/figma` skill is folded into this one.
+- **`/block-dev`**. Block conventions: editor UX, asset pipeline, button patterns, coding standards, editor-vs-frontend parity.
+- **`/block-bindings`**. For new dynamic content surfaces (post meta, taxonomy, custom fields) sourced through stock core blocks. Prefer over a custom `render_callback` block.
+- **`/interactivity-api`**. For new block frontend behaviour (toggles, accordions, modals). Prefer over hand-rolled `view.js` + webpack wiring.
+- **`/design-tokens`**. When Figma variables change. Re-runs 10up's `figma-to-wordpress-theme-json-exporter`, updates `theme.json`, Tailwind aliases in `theme-variables.css`, then refreshes the maps below.
 
 Key references: `.claude/figma-component-map.md` (block catalogue), `.claude/figma-token-map.md` (token translation).
 

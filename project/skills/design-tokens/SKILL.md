@@ -4,13 +4,13 @@ description: Keep Figma variables, theme.json, and Tailwind @theme tokens in syn
 disable-model-invocation: true
 allowed-tools: Read, Grep, Glob, Bash, Write, Edit
 ---
-<!-- Last updated: 2026-05-16T14:00+10:00 -->
+<!-- Last updated: 2026-05-16T17:00+10:00 -->
 
 # Skill: design-tokens
 
 ## When to Use
 
-When design tokens change in Figma — a new colour, a renamed spacing variable, a new typography size — and the change needs to flow into `theme.json` (which drives the block editor and Global Styles) and `theme-variables.css` (which drives Tailwind utility classes in templates).
+When design tokens change in Figma (a new colour, a renamed spacing variable, a new typography size) and the change needs to flow into `theme.json` (which drives the block editor and Global Styles) and `theme-variables.css` (which drives Tailwind utility classes in templates).
 
 Invoke before re-running the token map regeneration.
 
@@ -23,13 +23,13 @@ Invoke before re-running the token map regeneration.
 3. **`assets/theme-variables.css`** is a thin `@theme { ... }` block that aliases `--wp--custom--*` to short Tailwind-friendly names (`--color-peach`, `--spacing-150`, etc.).
 4. **`figma-token-map.md`** is the lookup table the figma-workflow skill reads on every Figma session.
 
-This is a one-way pipeline: Figma → `theme.json` → Tailwind aliases. Never hand-edit `theme.json` for design tokens — re-run the exporter.
+This is a one-way pipeline: Figma → `theme.json` → Tailwind aliases. Never hand-edit `theme.json` for design tokens; re-run the exporter.
 
 Component-specific dimensions (hero heights, modal widths, carousel offsets) the exporter does not emit are hand-authored in `theme-variables.css` under `:root` and documented in `DESIGN-TOKENS.md`.
 
 ## Method
 
-### Step 1 — Export from Figma
+### Step 1: Export from Figma
 
 Run 10up's plugin in Figma Dev Mode (designer or developer):
 
@@ -41,17 +41,17 @@ Run 10up's plugin in Figma Dev Mode (designer or developer):
 
 Save the output. The next steps run in this repo.
 
-### Step 2 — Merge into the project's `theme.json`
+### Step 2: Merge into the project's `theme.json`
 
 The exporter emits a `settings.custom` block. Merge into `<theme>/theme.json`:
 
 - Tokens nest under `settings.custom.color`, `settings.custom.spacing`, `settings.custom.typography`, etc.
 - Each token emits a CSS variable named `--wp--custom--<group>--<name>` (kebab-case).
-- Don't overwrite the rest of `theme.json` — only the `settings.custom` subtree.
+- Don't overwrite the rest of `theme.json`. Only the `settings.custom` subtree.
 
 Project-specific tokens the exporter doesn't reach stay in `settings.custom` too, hand-authored.
 
-### Step 3 — Update the Tailwind alias file
+### Step 3: Update the Tailwind alias file
 
 `<theme>/assets/theme-variables.css` is a Tailwind v4 `@theme` block aliasing WP custom properties to short names:
 
@@ -68,31 +68,36 @@ Add an alias for each new token. Keep alias names matching the existing scale (`
 
 For component-specific dimensions the exporter doesn't emit (e.g. `--hero-primary-desktop`), author the CSS variable directly in the same file under `:root` and document in `DESIGN-TOKENS.md`.
 
-### Step 4 — Refresh `figma-token-map.md`
+### Step 4: Refresh `figma-token-map.md`
 
-After `theme.json` + `theme-variables.css` are updated:
+After `theme.json` + `theme-variables.css` are updated, regenerate the map. There is no separate script; Claude does the regeneration inside this skill by scanning the source files and rewriting the map wholesale.
 
-1. Read `theme.json` `settings.custom` for all colour/spacing/typography tokens.
-2. Read `theme-variables.css` for any CSS-only tokens not in `theme.json`.
-3. Regenerate `figma-token-map.md` so the Figma-name → token columns match.
+The mechanic:
 
-Don't hand-author the map — it gets stale. Update the `<!-- Last updated -->` comment when regenerated.
+1. **Scan.** Read `theme.json` `settings.custom.*` for every colour/spacing/typography token. Read `assets/theme-variables.css` for any `:root` or `@theme` declarations the exporter didn't emit (component-specific dimensions). Read the source Figma variable list (either re-export from Figma Dev Mode or paste it into the conversation).
+2. **Pair.** For each token, match the Figma variable name to the WP custom property and the Tailwind alias. Where a Figma name has both a desktop and a mobile mode that resolve to different scale positions, record both columns (see the "Spacing: Mobile ≠ Desktop" table in the existing map).
+3. **Rewrite.** Overwrite `.claude/figma-token-map.md` with the regenerated table. Don't merge edits row-by-row; partial regeneration is where drift creeps in.
+4. **Stamp.** Update the `<!-- Last updated -->` comment at the top to today.
 
-### Step 5 — Refresh `DESIGN-TOKENS.md`
+A prompt that works: _"Regenerate `.claude/figma-token-map.md` from the current `<theme>/theme.json` and `<theme>/assets/theme-variables.css`. Preserve the existing table headers and the mobile-vs-desktop spacing section. List anything in the source files that doesn't fit the existing table shape so I can decide where it goes."_
 
-`theme/DESIGN-TOKENS.md` documents the *why* — token philosophy, the mobile-vs-desktop spacing rule, where things live. Update narrative sections only if the rules changed. Don't duplicate the lookup table; reference `figma-token-map.md` instead.
+Don't hand-author the map row by row; it goes stale silently. Regenerate from source every time.
+
+### Step 5: Refresh `DESIGN-TOKENS.md`
+
+`theme/DESIGN-TOKENS.md` documents the *why*: token philosophy, the mobile-vs-desktop spacing rule, where things live. Update narrative sections only if the rules changed. Don't duplicate the lookup table; reference `figma-token-map.md` instead.
 
 ## When to Re-Run
 
 - Designer adds, renames, or removes a Figma variable.
 - A new breakpoint mode is added in Figma.
 - A token's value changes in Figma.
-- A new component-specific dimension is needed in the theme (hand-author in this case — the exporter doesn't reach it).
+- A new component-specific dimension is needed in the theme (hand-author in this case; the exporter doesn't reach it).
 
 ## Rules
 
-- **`theme.json` is canonical for design tokens.** Don't hand-edit it for design tokens — re-run the exporter.
+- **`theme.json` is canonical for design tokens.** Don't hand-edit it for design tokens; re-run the exporter.
 - **Tailwind aliases live in one file** (`assets/theme-variables.css`) and reference `--wp--custom--*`.
 - **Component-specific dimensions** are hand-authored in `theme-variables.css`, not generated.
 - **The maps refresh after the source files.** Never the other way round.
-- **One CSS custom property per token, never duplicated.** Don't define the same value in both `theme.json` and `theme-variables.css` directly — alias.
+- **One CSS custom property per token, never duplicated.** Don't define the same value in both `theme.json` and `theme-variables.css` directly. Alias.

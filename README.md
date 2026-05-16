@@ -1,3 +1,5 @@
+<!-- Last updated: 2026-05-16T17:00+10:00 -->
+
 # Figma to WP
 
 A starter bundle for using Claude Code to build WordPress blocks from Figma designs. It's the working setup from a real project, packaged so you can drop the parts you want into your own machine and repo.
@@ -15,26 +17,41 @@ A third folder, `project/github-templates/`, holds CI templates you copy into `.
 
 This bundle is project-scoped. It expects your global `~/.claude/` already has the agents, rules, and general-purpose skills it leans on. If you don't have them, grab them from your own dotfiles or a separate global bundle.
 
-- **Agents** — `wp` (implementation), `wp-reviewer` (read-only review), `wp-security` (sanitisation), `wp-perf` (queries and assets), `a11y` (WCAG), `ui-review` (usability), `browser-qa-agent` (drives Chrome), `frontend-builder` (parallel component work).
-- **Always-on rules** — communication, discipline, style, dependencies, input-validation. Path-scoped rules like `php-wordpress.md` and `ui-ux.md` are also expected to load when editing matching files.
-- **General-purpose skills** — `debug-wp` (structured WP triage), `block-journey` (trace an existing block's files).
+- **Agents**. `wp` (implementation), `wp-reviewer` (read-only review), `wp-security` (sanitisation), `wp-perf` (queries and assets), `a11y` (WCAG), `ui-review` (usability), `browser-qa-agent` (drives Chrome), `frontend-builder` (parallel component work).
+- **Always-on rules**. Communication, discipline, style, dependencies, input-validation. Path-scoped rules like `php-wordpress.md` and `ui-ux.md` are also expected to load when editing matching files.
+- **General-purpose skills**. `debug-wp` (structured WP triage), `block-journey` (trace an existing block's files).
 
-The bundle itself does not ship any of these — install or symlink them in your own `~/.claude/`.
+The bundle itself does not ship any of these. Install or symlink them in your own `~/.claude/`.
+
+## Compatibility
+
+The patterns in this bundle target the following minimums. Anything newer is documented inline in the skill that uses it, gated behind a feature or version check so older targets still load cleanly.
+
+- **WordPress 6.6+** baseline. Block Bindings (stable since 6.5), Interactivity API (stable since 6.5), and Block API v3 all work on 6.6. WP 6.9+ unlocks the binding dropdown UI (`get_fields_list` field-object shape) and `supports.interactivity: { clientNavigation: true }` for client-side navigation. The `block-bindings` and `interactivity-api` skills gate these behind version checks so 6.6–6.8 sites continue to render.
+- **PHP 7.4+**. Examples use typed parameters, return types, and null-coalescing. WordPress core's floor is lower; the bundle's PHP examples assume 7.4 so you don't have to translate.
+- **Block API v3** (`"apiVersion": 3` in `block.json`). Required for `viewScriptModule` and the asset pipeline the block-dev skill documents.
+- **`theme.json` schema v3** (current). The design-tokens pipeline writes to `settings.custom.*`.
+- **Tailwind 4** for templates. The CLAUDE.example documents the `bg-(--var)` parentheses syntax this version requires. Don't paste Tailwind 3 bracket syntax.
+- **Node 18+** for `@wordpress/scripts` and the Tailwind 4 build pipeline.
+- **Figma Dev Mode MCP plugin** for the `mcp__figma__*` tools the figma-workflow skill calls. Install via Figma's plugin browser.
+- **Playwright MCP** (optional) for the measurement-driven spec audit in figma-workflow Step 8. Without it the audit falls back to a text comparison and flags visual verification as deferred.
+
+If your target site is on an older WP version, the skills still apply but features marked **6.9+ enhancement** in skill bodies should not be wired up.
 
 ## How the project-scoped pieces work
 
-Skills are workflows you trigger with a slash command. Each one is `disable-model-invocation: true` — Claude only runs them when you ask, not automatically.
+Skills are workflows you trigger with a slash command. Each one is `disable-model-invocation: true`, so Claude only runs them when you ask, not automatically.
 
-- **`/figma-workflow`** — the full Figma-to-code path. Block name gate, frame quality gate, pattern-vs-block branch, MCP plumbing, token translation, mobile spacing rules, measurement-driven spec audit. Folds the former global `/figma` MCP skill into one project-scoped workflow.
-- **`/block-dev`** — block conventions: editor UX, asset pipeline, button patterns, coding standards, editor-vs-frontend markup parity.
-- **`/block-bindings`** — for new dynamic content surfaces (post meta, taxonomy, custom fields) sourced through stock core blocks. Prefer over a custom `render_callback` block.
-- **`/interactivity-api`** — for new block frontend behaviour (toggles, accordions, modals). Prefer over hand-rolled `view.js` + webpack wiring.
-- **`/design-tokens`** — when Figma variables change. Re-runs 10up's [`figma-to-wordpress-theme-json-exporter`](https://github.com/10up/figma-to-wordpress-theme-json-exporter), updates `theme.json`, Tailwind aliases in `theme-variables.css`, then refreshes the maps.
+- **`/figma-workflow`**. The full Figma-to-code path. Block name gate, frame quality gate, pattern-vs-block branch, MCP plumbing, token translation, mobile spacing rules, measurement-driven spec audit. Folds the former global `/figma` MCP skill into one project-scoped workflow.
+- **`/block-dev`**. Block conventions: editor UX, asset pipeline, button patterns, coding standards, editor-vs-frontend markup parity.
+- **`/block-bindings`**. For new dynamic content surfaces (post meta, taxonomy, custom fields) sourced through stock core blocks. Prefer over a custom `render_callback` block.
+- **`/interactivity-api`**. For new block frontend behaviour (toggles, accordions, modals). Prefer over hand-rolled `view.js` + webpack wiring.
+- **`/design-tokens`**. When Figma variables change. Re-runs 10up's [`figma-to-wordpress-theme-json-exporter`](https://github.com/10up/figma-to-wordpress-theme-json-exporter), updates `theme.json`, Tailwind aliases in `theme-variables.css`, then refreshes the maps.
 
 Two markdown files sit alongside the skills and get read on every Figma session:
 
-- `figma-component-map.md` — Figma frame → `wpb/*` block (and shared component) lookup.
-- `figma-token-map.md` — Figma variable → token lookup. Canonical for the desktop-vs-mobile spacing table.
+- `figma-component-map.md`: Figma frame → `wpb/*` block (and shared component) lookup.
+- `figma-token-map.md`: Figma variable → token lookup. Canonical for the desktop-vs-mobile spacing table.
 
 ## Where things go
 
@@ -57,20 +74,20 @@ Copy each block to its destination, then restart Claude Code so it picks up the 
 - Drop sections that don't apply. The "no ACF" rule, the top border toggle, and the BEM shared components note are conventions from the source project. Keep them only if they fit yours.
 - Keep the shape: stack, where things live, your project conventions, then a pointer to the skills.
 
-The component and token maps are also examples. Regenerate them by scanning your own block plugin and theme tokens, and keep them current — the `design-tokens` skill covers regeneration after Figma changes. Stale maps lead Claude to invent components that already exist, which is the whole problem the maps are there to prevent.
+The component and token maps are also examples. Regenerate them by scanning your own block plugin and theme tokens, and keep them current. The `design-tokens` skill covers regeneration after Figma changes. Stale maps lead Claude to invent components that already exist, which is the whole problem the maps are there to prevent.
 
 ## Typical Figma to WP block flow
 
 You start a session with a Figma URL or a block name and run through something like this:
 
 1. Run `/figma-workflow [URL or block name]`. The skill loads project rules and confirms what you're building.
-2. **Block name gate** — it stops and asks which existing block this maps to, before pulling anything from Figma.
-3. **Frame quality gate** — it sanity-checks the Figma source (anonymous layers, non-Auto-Layout, instance-only nodes, missing breakpoint variants) before any MCP call.
-4. **Pattern or block?** — if the frame is a section composed of existing blocks with no new behaviour, route to a pattern PHP file in `<theme>/patterns/` instead of a new `wpb/*` block.
-5. **MCP plumbing** — `get_metadata` first if needed, then `get_design_context` on the component definition node (not an instance), declaring which variable mode you're pulling. `get_variable_defs` for tokens. Screenshots only on visual mismatch.
-6. **Implementation** — the path-scoped rules (PHP/WordPress, UI/UX) load in the background and shape escaping, accessibility, and visual fixes. The component and token maps stop you reinventing existing components.
-7. **Measurement-driven spec audit** — render the block (locally, or via the Playground PR preview), use Playwright MCP `browser_evaluate` to extract `getComputedStyle` and `getBoundingClientRect`, compare numerically against the MCP values. Visual screenshot diff is only Step 9, and only when the measurements pass but the design still doesn't match.
-8. **Review** — dispatch review agents in parallel: `wp-reviewer`, `a11y`, `ui-review`, plus `wp-security` if you touched input handling.
+2. **Block name gate.** It stops and asks which existing block this maps to, before pulling anything from Figma.
+3. **Frame quality gate.** It sanity-checks the Figma source (anonymous layers, non-Auto-Layout, instance-only nodes, missing breakpoint variants) before any MCP call.
+4. **Pattern or block?** If the frame is a section composed of existing blocks with no new behaviour, route to a pattern PHP file in `<theme>/patterns/` instead of a new `wpb/*` block.
+5. **MCP plumbing.** `get_metadata` first if needed, then `get_design_context` on the component definition node (not an instance), declaring which variable mode you're pulling. `get_variable_defs` for tokens. Screenshots only on visual mismatch.
+6. **Implementation.** The path-scoped rules (PHP/WordPress, UI/UX) load in the background and shape escaping, accessibility, and visual fixes. The component and token maps stop you reinventing existing components.
+7. **Measurement-driven spec audit.** Render the block (locally, or via the Playground PR preview), use Playwright MCP `browser_evaluate` to extract `getComputedStyle` and `getBoundingClientRect`, compare numerically against the MCP values. Visual screenshot diff is only Step 9, and only when the measurements pass but the design still doesn't match.
+8. **Review.** Dispatch review agents in parallel: `wp-reviewer`, `a11y`, `ui-review`, plus `wp-security` if you touched input handling.
 9. If something misbehaves at runtime, `/debug-wp` walks you through diagnosis.
 
 ## Watch your Figma MCP token usage
@@ -148,6 +165,6 @@ See the [`WordPress/action-wp-playground-pr-preview`](https://github.com/WordPre
 
 ## Notes
 
-The bundle assumes you're already running Claude Code with the official Figma plugin installed (it provides the `mcp__figma__*` tools the skills call). Install that first if it's missing. The measurement-driven spec audit also assumes Playwright MCP is available — it's optional, but without it the audit falls back to a text-comparison check and flags visual verification as deferred.
+The bundle assumes you're already running Claude Code with the official Figma plugin installed (it provides the `mcp__figma__*` tools the skills call). Install that first if it's missing. The measurement-driven spec audit also assumes Playwright MCP is available. It's optional, but without it the audit falls back to a text-comparison check and flags visual verification as deferred.
 
 Rules and skills with a `<!-- Last updated: ... -->` comment are tracked by a staleness check. If you see one older than about a month, review it before relying on it. AI best practices and tooling shift fast.

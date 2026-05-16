@@ -2,7 +2,7 @@
 	"$schema": "https://playground.wordpress.net/blueprint-schema.json",
 	"meta": {
 		"description": "Seeds a preview page with the block(s) under change. Customise the post_content below per PR or per branch.",
-		"_comment": "Copy to .github/playground-blueprint.json. The playground-preview.yml workflow references it by path."
+		"_comment": "Copy to .github/playground-blueprint.json. The playground-preview.yml workflow references it by path. The post_content is one Gutenberg block comment — replace it wholesale with whatever block markup you want previewed. HTML comments do not nest, so don't wrap an inner wp:* comment in an outer descriptive one."
 	},
 	"landingPage": "/?page_id=2",
 	"preferredVersions": {
@@ -21,7 +21,7 @@
 		},
 		{
 			"step": "runPHP",
-			"code": "<?php require_once '/wordpress/wp-load.php'; wp_insert_post( [ 'ID' => 2, 'post_title' => 'Block Preview', 'post_status' => 'publish', 'post_type' => 'page', 'post_content' => '<!-- Replace this comment with the block markup you want to preview. For example: <!-- wp:wpb/primary-hero {\"heading\":\"Preview\"} /--> -->' ] );"
+			"code": "<?php require_once '/wordpress/wp-load.php'; wp_insert_post( [ 'ID' => 2, 'post_title' => 'Block Preview', 'post_status' => 'publish', 'post_type' => 'page', 'post_content' => '<!-- wp:wpb/primary-hero {\"heading\":\"Preview\"} /-->' ] );"
 		}
 	]
 }

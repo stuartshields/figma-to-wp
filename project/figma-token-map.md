@@ -1,4 +1,4 @@
-<!-- Last updated: 2026-05-16T14:00+10:00 -->
+<!-- Last updated: 2026-05-16T17:00+10:00 -->
 
 # Figma → Code Token Map
 
@@ -6,22 +6,22 @@ Generated from `content/themes/wp-theme/theme.json`, `theme-variables.css`, and 
 
 **This file is the canonical desktop ↔ mobile spacing reference.** The figma-workflow skill and `DESIGN-TOKENS.md` both link here rather than duplicate the table.
 
-**The canonical reference is `content/themes/wp-theme/DESIGN-TOKENS.md`** — read it for context and the why behind the scale. This file is the lookup table: when Figma returns a variable name, find it here and use the matching token.
+**The canonical reference is `content/themes/wp-theme/DESIGN-TOKENS.md`**. Read it for context and the why behind the scale. This file is the lookup table: when Figma returns a variable name, find it here and use the matching token.
 
 ---
 
 ## Critical notes before using any token
 
-1. **This theme is Tailwind 4** — it uses arbitrary CSS variable syntax like `max-w-(--layout-site)`, `bg-(--color-vanilla)`, `rounded-(--radius-card)`. Do **not** use Tailwind 3 `max-w-[var(--layout-site)]` syntax — it will silently break.
+1. **This theme is Tailwind 4.** It uses arbitrary CSS variable syntax like `max-w-(--layout-site)`, `bg-(--color-vanilla)`, `rounded-(--radius-card)`. Do **not** use Tailwind 3 `max-w-[var(--layout-site)]` syntax. It will silently break.
 2. **Spacing tokens have different values at mobile vs desktop.** Figma's `spacing/150` means 12px on desktop but 8px on mobile. Our `theme.json` only holds desktop values. See the mobile-vs-desktop section below and **do not skip it**.
-3. **Never hardcode hex values or raw pixel measurements.** If Figma returns `#f2796c`, that is the `peach` token — use `bg-peach` / `text-peach` / `--color-peach`, never `bg-[#f2796c]`.
+3. **Never hardcode hex values or raw pixel measurements.** If Figma returns `#f2796c`, that is the `peach` token. Use `bg-peach` / `text-peach` / `--color-peach`, never `bg-[#f2796c]`.
 4. **Two parallel systems exist.** `theme.json` drives the block editor and WP Global Styles (`var(--wp--preset--color--peach)`). `theme-variables.css` drives Tailwind utilities (`bg-peach`, `gap-150`). They hold the same values. When a token changes in Figma, update both.
 
 ---
 
-## Colors
+## Colours
 
-Figma uses semantic names. Our palette mirrors them 1:1 — **no translation needed**, the Figma name IS the token name.
+Figma uses semantic names. Our palette mirrors them 1:1. **No translation needed**, the Figma name IS the token name.
 
 | Figma name | Hex | Tailwind utility | CSS variable | theme.json slug |
 |---|---|---|---|---|
@@ -53,7 +53,7 @@ Figma uses semantic names. Our palette mirrors them 1:1 — **no translation nee
 - `--color-melon-dark: #ffe3d6` → `bg-melon-dark`
 - `--color-ice-dark: #b5d7ff` → `bg-ice-dark`
 
-### Semantic color aliases (`:root` in theme-variables.css)
+### Semantic colour aliases (`:root` in theme-variables.css)
 
 Prefer these when Figma uses semantic intent rather than a specific colour:
 
@@ -73,9 +73,9 @@ Prefer these when Figma uses semantic intent rather than a specific colour:
 | CTA outline border (on dark) | `--cta-outline-border` | `rgba(255,255,255,0.2)` |
 | CTA outline text (on dark) | `--cta-outline-text` | `white` |-
 
-## Spacing — Desktop
+## Spacing: Desktop
 
-Scale uses a numbered system. **The number is roughly px × 12.5**, but don't do the math — use the table. Tokens work with every spacing utility: `gap-`, `p-`, `px-`, `py-`, `m-`, `mx-`, `my-`, `pt-`, etc.
+Scale uses a numbered system. **The number is roughly px × 12.5**, but don't do the math. Use the table. Tokens work with every spacing utility: `gap-`, `p-`, `px-`, `py-`, `m-`, `mx-`, `my-`, `pt-`, etc.
 
 | Figma | Desktop value | Token |
 |---|---|---|
@@ -103,15 +103,15 @@ Scale uses a numbered system. **The number is roughly px × 12.5**, but don't do
 | `spacing/1200` | 96px | `gap-1200` |
 | `spacing/1500` | 120px | `gap-1500` |
 
-**This is not an 8pt grid.** Values like 5px, 10px, 14px, 30px, 43px, 60px are intentional — do not "round" them or flag them as inconsistent.
+**This is not an 8pt grid.** Values like 5px, 10px, 14px, 30px, 43px, 60px are intentional. Do not "round" them or flag them as inconsistent.
 
 **Use tokens over raw Tailwind multipliers.** Write `gap-150` (12px) not `gap-3` (12px). They produce the same CSS, but `gap-150` ties back to the design system.
 
 ---
 
-## Spacing — Mobile ≠ Desktop (critical)
+## Spacing: Mobile ≠ Desktop (critical)
 
-Figma's spacing variables have two modes. The same variable name resolves to different pixel values. `theme.json` only holds the **desktop** values because WordPress doesn't support responsive spacing presets. So when Figma says `spacing/150` at mobile, that is **not** `gap-150` (which is 12px) — it's 8px, which is `gap-100` on our scale.
+Figma's spacing variables have two modes. The same variable name resolves to different pixel values. `theme.json` only holds the **desktop** values because WordPress doesn't support responsive spacing presets. So when Figma says `spacing/150` at mobile, that is **not** `gap-150` (which is 12px). It's 8px, which is `gap-100` on our scale.
 
 | Figma var | Desktop value | Desktop token | Mobile value | Mobile token |
 |---|---|---|---|---|
@@ -125,22 +125,22 @@ Figma's spacing variables have two modes. The same variable name resolves to dif
 
 ### How to apply
 
-**Mobile-only templates** (anything inside `lg:hidden` or the mobile menu panel) — use the mobile token directly:
+**Mobile-only templates** (anything inside `lg:hidden` or the mobile menu panel). Use the mobile token directly:
 ```html
 <div class="gap-100"><!-- Figma spacing/150 at mobile = 8px --></div>
 ```
 
-**Desktop-only templates** (anything inside `hidden lg:flex`) — use the desktop token:
+**Desktop-only templates** (anything inside `hidden lg:flex`). Use the desktop token:
 ```html
 <div class="gap-150"><!-- Figma spacing/150 at desktop = 12px --></div>
 ```
 
-**Shared / responsive elements** — mobile token as the base, desktop with `lg:` prefix:
+**Shared / responsive elements.** Mobile token as the base, desktop with `lg:` prefix:
 ```html
 <div class="gap-100 lg:gap-150"><!-- 8px mobile, 12px desktop --></div>
 ```
 
-We did not create separate `-mobile` spacing tokens because the mobile values already exist at other positions on the scale — duplicating would bloat the token count with no benefit.
+We did not create separate `-mobile` spacing tokens because the mobile values already exist at other positions on the scale. Duplicating would bloat the token count with no benefit.
 
 ---
 
@@ -157,7 +157,7 @@ We did not create separate `-mobile` spacing tokens because the mobile values al
 | Semi-bold | 600 | Headings |
 | Extra Bold | 800 | Eyebrow labels (uppercase) |
 
-### Font sizes — desktop
+### Font sizes: desktop
 
 | Figma name | Value | Token | theme.json slug |
 |---|---|---|---|
@@ -175,9 +175,9 @@ We did not create separate `-mobile` spacing tokens because the mobile values al
 | Eyebrow | 14px | `text-eyebrow` | `eyebrow` |
 | Caption | 14px | `text-caption` | (css-only) |
 
-### Font sizes — mobile
+### Font sizes: mobile
 
-Typography **does** get dedicated `-mobile` tokens (unlike spacing), because mobile type values don't map cleanly to other desktop positions. **Always use a `-mobile` token for mobile type — never repurpose a desktop token that happens to share the same pixel value.**
+Typography **does** get dedicated `-mobile` tokens (unlike spacing), because mobile type values don't map cleanly to other desktop positions. **Always use a `-mobile` token for mobile type. Never repurpose a desktop token that happens to share the same pixel value.**
 
 | Mobile token | Value | Desktop equivalent |
 |---|---|---|
@@ -191,7 +191,7 @@ Typography **does** get dedicated `-mobile` tokens (unlike spacing), because mob
 | `text-sm-body-mobile` | 14px | `text-sm-body` (16px) |
 | `text-caption-mobile` | 12px | `text-caption` (14px) |
 
-### Font sizes — tablet
+### Font sizes: tablet
 
 | Tablet token | Value | Desktop equivalent |
 |---|---|---|
@@ -225,16 +225,16 @@ Line heights are defined separately from font sizes and must be paired explicitl
 |---|---|---|---|
 | `--radius-card` | 16px | `rounded-(--radius-card)` or `rounded-card` | Cards (desktop) |
 | `--radius-card-mobile` | 8px | `rounded-card-mobile` | Cards (mobile) |
-| `--radius-image` | 16px | — | Images (desktop) |
-| `--radius-image-mobile` | 8px | — | Images (mobile) |
-| `--radius-tile` | 20px | — | Ticker digit tiles |
+| `--radius-image` | 16px | (none) | Images (desktop) |
+| `--radius-image-mobile` | 8px | (none) | Images (mobile) |
+| `--radius-tile` | 20px | (none) | Ticker digit tiles |
 | `--radius-button` | 1000px | `rounded-(--radius-button)` / `rounded-full` | Pill buttons |
 
 **Additionally from theme.json `settings.custom.radius`:**
-- `sm`: 2px — small radius
-- `button`: 1000px — mirror of `--radius-button`
-- `card`: 16px / `cardMobile`: 8px — mirror of card radii
-- `image`: 16px / `imageMobile`: 8px — mirror of image radii
+- `sm`: 2px, small radius
+- `button`: 1000px, mirror of `--radius-button`
+- `card`: 16px / `cardMobile`: 8px, mirror of card radii
+- `image`: 16px / `imageMobile`: 8px, mirror of image radii
 
 ---
 
@@ -307,7 +307,7 @@ From `theme.json` `settings.custom.padding` and mirrored in `theme-variables.css
 
 ## Component-specific dimensions
 
-These are hand-tuned dimensions from Figma for specific components. Not generic tokens — use only in the component they belong to. Full list is in `theme-variables.css`; this is a topical index.
+These are hand-tuned dimensions from Figma for specific components. Not generic tokens. Use only in the component they belong to. Full list is in `theme-variables.css`; this is a topical index.
 
 **Hero heights:** `--hero-primary-mobile` (844px), `--hero-primary-tablet` (940px), `--hero-primary-laptop` (797px), `--hero-primary-desktop` (940px), `--hero-secondary-mobile` (650px), `--hero-secondary-tablet` (720px), `--hero-secondary-laptop` / `-desktop` (796px), `--hero-min-mobile` (400px), `--hero-min-desktop` (600px), `--hero-padding-top` (140px).
 

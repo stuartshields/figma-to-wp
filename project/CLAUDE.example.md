@@ -1,5 +1,5 @@
 <!-- TEMPLATE: when you copy this file to .claude/CLAUDE.md, reset the Last updated stamp below to today's date. It's tracked by the staleness rule, and a stale template date pollutes that check. -->
-<!-- Last updated: 2026-05-16T17:30+10:00 -->
+<!-- Last updated: 2026-05-16T18:00+10:00 -->
 
 # Project Conventions (example)
 
@@ -97,7 +97,7 @@ These rules apply to every surface Claude writes for this project: code, code co
 
 ## Skills
 
-- **`/figma-workflow`**. Full Figma-to-code path: block name gate, frame quality gate, pattern-vs-block branch, MCP plumbing, token translation, measurement-driven spec audit. The former global `/figma` skill is folded into this one.
+- **`/figma-workflow`**. Full Figma-to-code path: block name gate, frame quality gate, pattern-vs-block branch, MCP plumbing, token translation, measurement-driven spec audit.
 - **`/block-dev`**. Entry point for block development: editor UX, reference-plugin pattern, pointers to the deeper block skills below.
 - **`/block-asset-pipeline`**. Wiring `view.js`, webpack, `block.json`, and `inc/assets.php` for a block's frontend CSS and view script.
 - **`/block-buttons`**. The `buttons` array attribute, `ButtonGroupEditor`, and the shared `animated-button` render partial.

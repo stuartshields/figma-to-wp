@@ -1,4 +1,4 @@
-<!-- Last updated: 2026-05-16T17:00+10:00 -->
+<!-- Last updated: 2026-05-16T18:00+10:00 -->
 
 # Design Tokens
 
@@ -37,6 +37,7 @@ The spacing tokens use a numbered scale. The number is roughly the pixel value m
 |-------|-------|------------------|
 | `50` | 4px | `gap-50`, `p-50`, `m-50` |
 | `62` | 5px | `gap-62` |
+| `75` | 6px | `gap-75` (css-only, not in theme.json) |
 | `100` | 8px | `gap-100`, `p-100` |
 | `125` | 10px | `gap-125`, `p-125` |
 | `150` | 12px | `gap-150`, `p-150` |
@@ -46,11 +47,13 @@ The spacing tokens use a numbered scale. The number is roughly the pixel value m
 | `250` | 20px | `gap-250`, `p-250` |
 | `300` | 24px | `gap-300`, `p-300` |
 | `325` | 26px | `gap-325` |
+| `350` | 28px | `gap-350` (css-only) |
 | `375` | 30px | `gap-375` |
 | `400` | 32px | `gap-400`, `p-400` |
 | `500` | 40px | `gap-500`, `p-500` |
 | `537` | 43px | `gap-537` |
 | `600` | 48px | `gap-600` |
+| `750` | 60px | `gap-750` (css-only) |
 | `800` | 64px | `gap-800`, `px-800` |
 | `1000` | 80px | `gap-1000` |
 | `1200` | 96px | `gap-1200` |
@@ -112,10 +115,15 @@ Full palette is in `theme.json` under `settings.color.palette` and mirrored in `
 
 | Token | Value | Usage |
 |-------|-------|-------|
-| `rounded` | 4px | Dropdown tiles, small cards |
-| `rounded-card` | 16px | Cards (desktop) |
-| `rounded-card-mobile` | 8px | Cards (mobile) |
-| `rounded-button` | 1000px | Pill buttons |
+| `sm` (theme.json) | 2px | Small radius |
+| `rounded-card` / `--radius-card` | 16px | Cards (desktop) |
+| `rounded-card-mobile` / `--radius-card-mobile` | 8px | Cards (mobile) |
+| `--radius-image` | 16px | Images (desktop) |
+| `--radius-image-mobile` | 8px | Images (mobile) |
+| `--radius-tile` | 20px | Ticker digit tiles |
+| `rounded-button` / `--radius-button` | 1000px | Pill buttons |
+
+Full canonical table (with Tailwind utilities and the mirrored `theme.json` `settings.custom.radius` keys) lives in `.claude/figma-token-map.md` under "Border Radius".
 
 ## Where Things Live
 

@@ -4,7 +4,7 @@ description: Use the Block Bindings API for blocks that read dynamic content (po
 disable-model-invocation: true
 allowed-tools: Read, Grep, Glob, Bash, Write, Edit
 ---
-<!-- Last updated: 2026-05-16T17:00+10:00 -->
+<!-- Last updated: 2026-05-16T18:00+10:00 -->
 
 # Skill: block-bindings
 
@@ -62,7 +62,7 @@ function register_sources(): void {
 	// 6.9+ enhancement: dropdown of available fields in the editor.
 	// On 6.6–6.8 the key is unknown to register_block_bindings_source(),
 	// silently ignored, and editors enter the meta key by hand.
-	if ( function_exists( 'wp_register_block_bindings_source' ) || version_compare( get_bloginfo( 'version' ), '6.9', '>=' ) ) {
+	if ( version_compare( get_bloginfo( 'version' ), '6.9', '>=' ) ) {
 		$properties['get_fields_list'] = __NAMESPACE__ . '\\get_post_meta_fields';
 	}
 

@@ -1,4 +1,4 @@
-<!-- Last updated: 2026-05-16T17:00+10:00 -->
+<!-- Last updated: 2026-05-16T18:00+10:00 -->
 
 # Figma → Code Token Map
 
@@ -71,7 +71,9 @@ Prefer these when Figma uses semantic intent rather than a specific colour:
 | CTA surface | `--cta-primary-surface` | `peach` |
 | CTA text | `--cta-primary-text` | `plum-700` |
 | CTA outline border (on dark) | `--cta-outline-border` | `rgba(255,255,255,0.2)` |
-| CTA outline text (on dark) | `--cta-outline-text` | `white` |-
+| CTA outline text (on dark) | `--cta-outline-text` | `white` |
+
+---
 
 ## Spacing: Desktop
 

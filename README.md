@@ -1,4 +1,4 @@
-<!-- Last updated: 2026-05-16T17:30+10:00 -->
+<!-- Last updated: 2026-05-16T18:00+10:00 -->
 
 # Figma to WP
 
@@ -42,7 +42,7 @@ If your target site is on an older WP version, the skills still apply but featur
 
 Skills are workflows you trigger with a slash command. Each one is `disable-model-invocation: true`, so Claude only runs them when you ask, not automatically.
 
-- **`/figma-workflow`**. The full Figma-to-code path. Block name gate, frame quality gate, pattern-vs-block branch, MCP plumbing, token translation, mobile spacing rules, measurement-driven spec audit. Folds the former global `/figma` MCP skill into one project-scoped workflow.
+- **`/figma-workflow`**. The full Figma-to-code path. Block name gate, frame quality gate, pattern-vs-block branch, MCP plumbing, token translation, mobile spacing rules, measurement-driven spec audit.
 - **`/block-dev`**. Entry point for block development. Editor UX, reference-plugin pattern, pointers to the deeper block skills below.
 - **`/block-asset-pipeline`**. Wiring `view.js`, webpack, `block.json`, and `inc/assets.php` for a block's frontend CSS and view script.
 - **`/block-buttons`**. The `buttons` array attribute, `ButtonGroupEditor`, and the shared `animated-button` render partial.
